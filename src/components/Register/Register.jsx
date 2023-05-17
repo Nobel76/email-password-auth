@@ -1,7 +1,8 @@
 /*eslint-disable*/
 import React, { useState } from 'react';
-import {createUserWithEmailAndPassword, getAuth} from 'firebase/auth'
+import {createUserWithEmailAndPassword, getAuth, sendEmailVerification, updateProfile} from 'firebase/auth'
 import app from '../../firebase/firebase.config';
+import { Link } from 'react-router-dom';
 const auth = getAuth(app)
 const Register = () => {
 const [error, setError] = useState('');
@@ -12,7 +13,8 @@ const handleSubmit = (event) =>{
     setError('');
     const email = event.target.email.value;
     const password = event.target.password.value;
-    console.log(email,password)
+    const name = event.target.name.value;
+    console.log(email,name,password)
     //validate
     if(!/(?=.*[A-Z])/.test(password)){
         setError('Please add at least one uppercase');
@@ -29,9 +31,12 @@ const handleSubmit = (event) =>{
     .then(result => {
         const loggedUser = result.user;
         console.log(loggedUser);
+
         setError('');
         event.target.reset();
-        setSuccess('user has been created successfully')
+        setSuccess('user has been created successfully');
+        sendEmailVerificationEmail(result.user);
+        updateUserData(result.user, name);
     })
     .catch(error => {
         console.error(error.message);
@@ -40,6 +45,25 @@ const handleSubmit = (event) =>{
     })
 }
 
+const sendEmailVerificationEmail = (user) =>{
+ sendEmailVerification(user)
+ .then(result =>{
+    console.log(result)
+    alert('please verify your email address')
+
+ })
+}
+const updateUserData = (name) =>{
+    updateProfile(user, {
+        displayName: name
+    })
+    .then(() => {
+        console.log('user name updated')
+    })
+    .catch(error => {
+  setError(error.message)
+    })
+}
  const handleEmailChange = (event) =>{
 // console.log(event.target.value);
 // setEmail(event.target.value);
@@ -61,6 +85,7 @@ const handlePasswordBlur = (event) =>{
            <br/>
            <input className='btn btn-primary' type="submit" value="Register" />
             </form>
+            <p><small>already have an account? please <Link to='/login'>Login</Link></small></p>
             <p className='text-danger'>{error}</p>
             <p className='text-success'>{success}</p>
         </div>

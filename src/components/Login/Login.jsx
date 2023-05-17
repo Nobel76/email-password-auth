@@ -1,10 +1,15 @@
 /*eslint-disable*/
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
+import {getAuth, sendPasswordResetEmail, signInWithEmailAndPassword} from 'firebase/auth';
+import app from '../../firebase/firebase.config';
+import { Link } from 'react-router-dom';
+
+const auth = getAuth(app);
 
 const Login = () => {
 const [error, setError] = useState('');
 const [success, setSuccess] = useState('');
-
+const emailRef = useRef();
 
 const handleLogin = event =>{
     event.preventDefault();
@@ -27,9 +32,37 @@ const handleLogin = event =>{
         setError('password must be 6 character long');
         return;
     }
+    signInWithEmailAndPassword(auth, email, password)
+    .then(result => {
+   const loggedUser = result.user;
+   if(!loggedUser.emailVerified){
+
+   }
+   setSuccess('user login successful');
+   setError('');
+    })
+
+    .catch(error => {
+      setError(error.message)
+      
+    })
 
 }
-
+const handleResetPassword = event => {
+ const email = emailRef.current.value;
+ if(!email){
+  alert('please provide your email address   to reset password')
+  return;
+ }
+ sendPasswordResetEmail(auth, email)
+ .then(() => {
+  alert('please check your email')
+ })
+ .then(error => {
+  console.log(error);
+  setError(error.message)
+ })
+}
 
     return (
         <div className='w-25 mx-auto'>
@@ -37,7 +70,7 @@ const handleLogin = event =>{
             <form onSubmit={handleLogin}>
                   <div className="form-group mb-3">
                     <label htmlFor="email">Email address</label>
-                    <input type="email" name='email' className="form-control" id="email" placeholder="Enter email" required/>
+                    <input type="email" ref={emailRef} name='email' className="form-control" id="email" placeholder="Enter email" required/>
                   </div>
                   <div className="form-group mb-3">
                     <label htmlFor="password">Password</label>
@@ -49,6 +82,8 @@ const handleLogin = event =>{
                   </div>
                   <button type="submit" className="btn btn-primary mt-3">Submit</button>
                 </form>
+                <p><small>Forget password? please <button onClick={handleResetPassword} className='btn btn-link'>Reset password</button></small></p>
+                <p><small>New to this web site ? please log in <Link to="/register">Register</Link></small></p>
                 <p className='text-danger'>{error}</p>
                 <p className='text-success'>{success}</p>
         </div>
